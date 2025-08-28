@@ -1,0 +1,13 @@
+# Virtual env
+venv/
+__pycache__/
+*.pyc
+
+# Logs and outputs
+logs/
+outputs/
+*.log
+*.json
+
+# System files
+.DS_Store

@@ -1,0 +1,6 @@
+colorama
+requests
+paramiko
+elasticsearch
+faker
+
