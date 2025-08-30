@@ -3,4 +3,4 @@ requests
 paramiko
 elasticsearch
 faker
-
+watchdog
