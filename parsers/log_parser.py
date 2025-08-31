@@ -1,77 +1,67 @@
 import re
-import json
 import os
-from datetime import datetime
+from engine import utils
 
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "..", "outputs")
-os.makedirs(OUTPUT_DIR, exist_ok=True)
+LOG_DIR = "parsers/sample_logs"
 
-def parse_auth_log(log_file):
-    """Parse SSH authentication logs (auth.log)"""
-    pattern = re.compile(r'(?P<timestamp>\w{3}\s+\d+\s[\d:]+)\s.*sshd.*Failed password for (?P<user>\w+) from (?P<ip>[\d.]+)')
-    results = []
+def parse_auth_log():
+    filepath = os.path.join(LOG_DIR, "auth.log")
+    if not os.path.exists(filepath):
+        return
 
-    with open(log_file, "r") as f:
+    with open(filepath, "r") as f:
         for line in f:
-            match = pattern.search(line)
+            match = re.search(r"Failed password for (\w+) from ([\d\.]+)", line)
             if match:
-                results.append({
-                    "timestamp": match.group("timestamp"),
-                    "attack_type": "ssh_bruteforce",
-                    "user": match.group("user"),
-                    "source_ip": match.group("ip"),
-                    "status": "failed"
-                })
-    return results
+                user, ip = match.groups()
+                log_entry = utils.format_log(
+                    source_ip=ip,
+                    dest_ip="localhost",
+                    attack_type="ssh_bruteforce",
+                    status=f"failed login for {user}"
+                )
+                utils.save_log(log_entry, "auth_events.json")
 
+def parse_access_log():
+    filepath = os.path.join(LOG_DIR, "access.log")
+    if not os.path.exists(filepath):
+        return
 
-def parse_apache_log(log_file):
-    """Parse Apache access logs"""
-    pattern = re.compile(r'(?P<ip>[\d.]+) - - \[(?P<timestamp>.+?)\] "(?P<method>\w+) (?P<url>\S+)')
-    results = []
-
-    with open(log_file, "r") as f:
+    with open(filepath, "r") as f:
         for line in f:
-            match = pattern.search(line)
+            match = re.search(r'([\d\.]+).*"GET (.*?) HTTP', line)
             if match:
-                results.append({
-                    "timestamp": match.group("timestamp"),
-                    "attack_type": "web_access",
-                    "method": match.group("method"),
-                    "url": match.group("url"),
-                    "source_ip": match.group("ip"),
-                    "status": "success"
-                })
-    return results
+                ip, path = match.groups()
+                log_entry = utils.format_log(
+                    source_ip=ip,
+                    dest_ip="localhost",
+                    attack_type="web_access",
+                    status=f"GET {path}"
+                )
+                utils.save_log(log_entry, "access_events.json")
 
+def parse_syslog():
+    filepath = os.path.join(LOG_DIR, "syslog")
+    if not os.path.exists(filepath):
+        return
 
-def parse_syslog(log_file):
-    """Parse generic syslog entries"""
-    results = []
-    with open(log_file, "r") as f:
+    with open(filepath, "r") as f:
         for line in f:
-            if "error" in line.lower() or "fail" in line.lower():
-                results.append({
-                    "timestamp": datetime.now().isoformat(),
-                    "attack_type": "system_error",
-                    "message": line.strip(),
-                    "status": "alert"
-                })
-    return results
+            if "error" in line.lower():
+                log_entry = utils.format_log(
+                    source_ip="localhost",
+                    dest_ip="localhost",
+                    attack_type="system_error",
+                    status=line.strip()
+                )
+                utils.save_log(log_entry, "syslog_events.json")
 
-
-def save_results(filename, data):
-    """Save parsed logs to JSON in outputs/"""
-    output_path = os.path.join(OUTPUT_DIR, filename)
-    with open(output_path, "w") as f:
-        json.dump(data, f, indent=4)
-    print(f"[+] Saved {len(data)} events to {output_path}")
-
+def run():
+    print("[*] Parsing logs...")
+    parse_auth_log()
+    parse_access_log()
+    parse_syslog()
+    print("[+] Parsing finished.")
 
 if __name__ == "__main__":
-    auth_logs = parse_auth_log("sample_logs/auth.log") if os.path.exists("sample_logs/auth.log") else []
-    apache_logs = parse_apache_log("sample_logs/access.log") if os.path.exists("sample_logs/access.log") else []
-    sys_logs = parse_syslog("sample_logs/syslog") if os.path.exists("sample_logs/syslog") else []
-
-    all_data = auth_logs + apache_logs + sys_logs
-    save_results("parsed_logs.json", all_data)
+    run()
