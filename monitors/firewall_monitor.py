@@ -1,29 +1,31 @@
+import sys
 import time
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
-import re
+from engine import utils
 
-ALERT_LOG = "outputs/alerts.log"
-FIREWALL_LOG = "monitors/sample_firewall.log" 
+LOG_FILE = "monitors/sample_firewall.log"
 
-class LogHandler(FileSystemEventHandler):
+class FirewallHandler(FileSystemEventHandler):
     def on_modified(self, event):
-        if event.src_path.endswith("sample_firewall.log"):
-            with open(FIREWALL_LOG, "r") as f:
-                lines = f.readlines()
-                last_line = lines[-1].strip()
+        if event.src_path.endswith(LOG_FILE):
+            with open(LOG_FILE, "r") as f:
+                for line in f.readlines()[-5:]: 
+                    if "DROP" in line or "DENY" in line:
+                        print(f"[ALERT] Suspicious firewall log: {line.strip()}")
+                        log_entry = utils.format_log(
+                            source_ip=line.split()[6],
+                            dest_ip=line.split()[8],
+                            attack_type="firewall_block",
+                            status=line.strip()
+                        )
+                        utils.save_log(log_entry, "firewall_alerts.json")
 
-                if "DROP" in last_line or "DENY" in last_line:
-                    alert = f"[ALERT] Suspicious firewall log detected: {last_line}"
-                    print(alert)
-                    with open(ALERT_LOG, "a") as log_file:
-                        log_file.write(alert + "\n")
-
-def start_monitor():
+def run():
     print("[*] Starting firewall log monitor (real-time)...")
-    event_handler = LogHandler()
+    event_handler = FirewallHandler()
     observer = Observer()
-    observer.schedule(event_handler, path="monitors/", recursive=False)
+    observer.schedule(event_handler, path="monitors", recursive=False)
     observer.start()
 
     try:
@@ -34,4 +36,4 @@ def start_monitor():
     observer.join()
 
 if __name__ == "__main__":
-    start_monitor()
+    run()
