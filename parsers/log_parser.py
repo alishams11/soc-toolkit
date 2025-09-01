@@ -56,12 +56,15 @@ def parse_syslog():
                 )
                 utils.save_log(log_entry, "syslog_events.json")
 
-def run():
-    print("[*] Parsing logs...")
-    parse_auth_log()
-    parse_access_log()
-    parse_syslog()
-    print("[+] Parsing finished.")
+def run(log_type):
+    if log_type == "auth":
+        parse_auth_log()
+    elif log_type == "apache":
+        parse_access_log()
+    elif log_type == "syslog":
+        parse_syslog()
+    else:
+        print(f"[!] Unknown log type: {log_type}")
 
 if __name__ == "__main__":
     run()
