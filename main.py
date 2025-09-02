@@ -1,6 +1,7 @@
 import argparse
 from parsers import log_parser
 from monitors import firewall_monitor
+from engine import alerts
 
 def main():
     parser = argparse.ArgumentParser(description="SOC Toolkit CLI")
@@ -11,8 +12,18 @@ def main():
 
     if args.parse:
         print(f"[*] Running parser for {args.parse} logs...")
-        log_parser.run(args.parse)
+        events = log_parser.run(args.parse)  
         print(f"[+] Log saved -> outputs/{args.parse}_events.json")
+
+        all_alerts = []
+        for e in events:
+            alert = alerts.check_alerts(e)
+            if alert:
+                all_alerts.append(alert)
+
+        if all_alerts:
+            alerts.display_alerts(all_alerts)
+            alerts.save_alerts(all_alerts)
 
     if args.monitor == "firewall":
         print("[*] Starting firewall monitor...")

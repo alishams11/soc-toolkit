@@ -1,70 +1,50 @@
-import re
+import json
 import os
-from engine import utils
-
-LOG_DIR = "parsers/sample_logs"
-
-def parse_auth_log():
-    filepath = os.path.join(LOG_DIR, "auth.log")
-    if not os.path.exists(filepath):
-        return
-
-    with open(filepath, "r") as f:
-        for line in f:
-            match = re.search(r"Failed password for (\w+) from ([\d\.]+)", line)
-            if match:
-                user, ip = match.groups()
-                log_entry = utils.format_log(
-                    source_ip=ip,
-                    dest_ip="localhost",
-                    attack_type="ssh_bruteforce",
-                    status=f"failed login for {user}"
-                )
-                utils.save_log(log_entry, "auth_events.json")
-
-def parse_access_log():
-    filepath = os.path.join(LOG_DIR, "access.log")
-    if not os.path.exists(filepath):
-        return
-
-    with open(filepath, "r") as f:
-        for line in f:
-            match = re.search(r'([\d\.]+).*"GET (.*?) HTTP', line)
-            if match:
-                ip, path = match.groups()
-                log_entry = utils.format_log(
-                    source_ip=ip,
-                    dest_ip="localhost",
-                    attack_type="web_access",
-                    status=f"GET {path}"
-                )
-                utils.save_log(log_entry, "access_events.json")
-
-def parse_syslog():
-    filepath = os.path.join(LOG_DIR, "syslog")
-    if not os.path.exists(filepath):
-        return
-
-    with open(filepath, "r") as f:
-        for line in f:
-            if "error" in line.lower():
-                log_entry = utils.format_log(
-                    source_ip="localhost",
-                    dest_ip="localhost",
-                    attack_type="system_error",
-                    status=line.strip()
-                )
-                utils.save_log(log_entry, "syslog_events.json")
+from datetime import datetime
 
 def run(log_type):
-    if log_type == "auth":
-        parse_auth_log()
-    elif log_type == "apache":
-        parse_access_log()
-    elif log_type == "syslog":
-        parse_syslog()
-    else:
-        print(f"[!] Unknown log type: {log_type}")
+    events = []
+    folder = f"outputs/{log_type}"
+    os.makedirs(folder, exist_ok=True)
 
-if __name__ == "__main__":
-    run()
+    if log_type == "auth":
+        filename = "auth_events.json"
+        with open("parsers/sample_logs/auth.log") as f:
+            for line in f:
+                if "Failed password" in line:
+                    events.append({
+                        "timestamp": str(datetime.now()),
+                        "log_type": "auth",
+                        "event": line.strip()
+                    })
+
+    elif log_type == "apache":
+        filename = "access_events.json"
+        with open("parsers/sample_logs/access.log") as f:
+            for line in f:
+                if "GET" in line or "POST" in line:
+                    events.append({
+                        "timestamp": str(datetime.now()),
+                        "log_type": "apache",
+                        "event": line.strip()
+                    })
+
+    elif log_type == "syslog":
+        filename = "syslog_events.json"
+        with open("parsers/sample_logs/syslog") as f:
+            for line in f:
+                if "error" in line or "failed" in line:
+                    events.append({
+                        "timestamp": str(datetime.now()),
+                        "log_type": "syslog",
+                        "event": line.strip()
+                    })
+
+    else:
+        print("[!] Unknown log type")
+        return 0
+
+    with open(f"{folder}/{filename}", "w") as f:
+        json.dump(events, f, indent=2)
+
+    return events
