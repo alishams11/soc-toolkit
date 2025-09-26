@@ -4,3 +4,8 @@ paramiko
 elasticsearch
 faker
 watchdog
+plotly
+matplotlib
+pandas
+kaleido
+
