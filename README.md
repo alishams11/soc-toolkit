@@ -1,19 +1,12 @@
-SOC Toolkit — v1.0 🚀
+# SOC Toolkit — v1.0 🚀
 
-A modular toolkit for log parsing, firewall monitoring, and attack-simulation demos.
-This project is designed to simulate SOC workflows, detect anomalies, and provide a playground for SOC analysts to practice detection, triage, and monitoring.
-🎯 Why It’s Useful for SOC Analysts (Use Cases)
+A modular toolkit for **log parsing**, **firewall monitoring**, and **attack simulation demos**.  
+The goal of this project is to **simulate SOC workflows**, detect anomalies, and provide hands-on practice for SOC analysts.  
 
-Incident Triage Practice → simulate common alerts (e.g., brute-force, suspicious HTTP access, port scans).
 
-Alert Engineering → experiment with simple detection rules and understand false positives/negatives.
+## 📂 Project Structure  
 
-Pipeline Understanding → see how logs are parsed, normalized, and transformed into alerts.
-
-Hunting Exercises → parse outputs and practice queries for IOCs in a lab environment.
-
-Dashboard Feeds → export alerts to ELK/Grafana for visualization.
-##📂 Project Structure
+```
 soc-toolkit/
 ├── parsers/        # Log parsers (auth, apache, syslog)
 ├── monitors/       # Real-time log monitors (firewall)
@@ -24,51 +17,81 @@ soc-toolkit/
 ├── main.py         # CLI entrypoint
 ├── requirements.txt# Dependencies
 └── LICENSE
-##🚀 Features
-Log Parsing
-SSH auth logs → detect brute-force attempts
-Apache access logs → detect suspicious login activity
-Syslog → detect errors & failed jobs
+```
 
-Real-Time Firewall Monitoring
-Watch live firewall logs (iptables-like format)
-Raise alerts on suspicious scans & anomalies
-Export alerts as JSON
+---
 
-Alerting Engine
-Rules: e.g., 5 failed SSH logins in 5 minutes
-Color-coded alerts in terminal
-Alerts stored in outputs/alerts.json
+## 🚀 Features  
 
-Attack Demos
-Brute-force simulation (expandable for more scenarios)
+- **Log Parsing**  
+  - SSH auth logs → detect brute-force attempts  
+  - Apache access logs → detect suspicious login attempts  
+  - Syslog → catch errors and failed jobs  
 
-##⚡ Installation
+- **Firewall Monitoring**  
+  - Watch real-time logs (iptables-style)  
+  - Detect suspicious scans or unusual traffic  
+  - Export alerts to `outputs/alerts.json`  
+
+- **Alerting Engine**  
+  - Rule-based detection (e.g. >5 failed logins in 5 min)  
+  - Color-coded CLI alerts  
+  - JSON alerts for dashboards/analysis  
+
+- **Attack Demos**  
+  - Brute-force simulation (extendable)  
+
+---
+
+## 🎯 Why It’s Useful for SOC Analysts  
+
+- Practice **incident triage** with real log samples  
+- Learn **alert engineering** & rule-tuning  
+- Understand **log → parse → alert → dashboard** pipeline  
+- Use outputs for **hunting exercises** or dashboards (ELK/Grafana)  
+
+---
+
+## ⚡ Installation  
+
+```bash
 git clone https://github.com/alishams11/soc-toolkit.git
 cd soc-toolkit
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+```
 
-##🛠️ Usage
-1) Parse Logs
-# SSH Auth log parsing
+---
+
+## 🛠️ Usage  
+
+### Log Parsing  
+```bash
 python3 main.py --parse auth --input demos/sample_auth.log --output outputs/auth.json
-# Apache log parsing
 python3 main.py --parse apache --input demos/sample_apache.log --output outputs/apache.json
-# Syslog parsing
 python3 main.py --parse syslog --input demos/sample_syslog.log --output outputs/syslog.json
+```
 
-2) Real-Time Firewall Monitoring
+### Firewall Monitoring  
+```bash
 python3 main.py --monitor firewall --live demos/firewall_stream.log
+```
 
-3) Run Attack Demo
+### Attack Demo  
+```bash
 python3 main.py --demo brute_force
+```
 
-##📊 Outputs
-Parsed logs → outputs/*.json
-Alerts → outputs/alerts.json
-Sample Alert JSON
+---
+
+## 📊 Outputs  
+
+- Parsed logs → `outputs/*.json`  
+- Alerts → `outputs/alerts.json`  
+
+**Example alert JSON:**  
+```json
 {
   "timestamp": "2025-10-03T09:12:34Z",
   "rule": "ssh_bruteforce",
@@ -77,10 +100,18 @@ Sample Alert JSON
   "window_minutes": 5,
   "details": "7 failed attempts on /var/log/auth.log"
 }
-##📸 Examples & Screenshots
-screenshots/cli_auth_parsing.png → CLI run with SSH brute-force detection
-screenshots/cli_firewall_monitor.png → Real-time firewall monitoring alerts
-screenshots/dashboard_auth_alerts.png → Alerts visualized in Grafana/Kibana
+```
 
-##📝 License
-This project is licensed under the MIT License.
+---
+
+## 📸 Screenshots  
+
+- `screenshots/cli_auth_parsing.png` → SSH log parsing example  
+- `screenshots/cli_firewall_monitor.png` → Firewall monitoring alerts  
+- `screenshots/dashboard_auth_alerts.png` → Optional Grafana/Kibana visualization  
+
+---
+
+## 📝 License  
+
+This project is licensed under the **MIT License**.  
